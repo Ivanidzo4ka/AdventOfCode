@@ -1,1 +1,3 @@
-/Advent.sln
+**/bin/**
+**/obj/**
+**/*.txt
