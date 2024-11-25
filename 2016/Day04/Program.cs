@@ -37,7 +37,6 @@ void PartTwo()
     foreach (var line in lines)
     {
         var sp = line.Split('-');
-
         var num = int.Parse(sp[^1].Substring(0, sp[^1].Length - 7));
         var sb = new StringBuilder();
         for (int i = 0; i < sp.Length - 1; i++)

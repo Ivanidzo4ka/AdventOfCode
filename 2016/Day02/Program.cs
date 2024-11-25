@@ -46,14 +46,14 @@ void PartTwo()
         "   D   ",
         "       "
     };
- 
+
     var ans = new StringBuilder();
     foreach (var line in lines)
     {
         foreach (var move in line)
         {
-            var newx=x;
-            var newy=y;
+            var newx = x;
+            var newy = y;
             switch (move)
             {
                 case 'U': newx--; break;
@@ -61,7 +61,7 @@ void PartTwo()
                 case 'R': newy++; break;
                 case 'L': newy--; break;
             }
-            if (pad[newx][newy]!=' ')
+            if (pad[newx][newy] != ' ')
             {
                 x = newx;
                 y = newy;
