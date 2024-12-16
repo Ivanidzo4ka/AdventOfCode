@@ -184,7 +184,7 @@ void PartTwo(bool test = false)
                 board[newx][newy] = '@';
             }
         }
-       
+
         startx = newx;
         starty = newy;
     }
@@ -195,7 +195,7 @@ void PartTwo(bool test = false)
             {
                 ans += 100 * i + j;
             }
-        Console.WriteLine(ans);
+    Console.WriteLine(ans);
 }
 
 void Print(char[][] board)
