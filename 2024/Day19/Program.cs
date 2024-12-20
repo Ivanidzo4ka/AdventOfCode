@@ -1,7 +1,4 @@
-﻿using System.Runtime.InteropServices.Marshalling;
-using System.Runtime.Intrinsics.Arm;
-
-PartOne(true);
+﻿PartOne(true);
 PartOne(false);
 PartTwo(true);
 PartTwo(false);
