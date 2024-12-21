@@ -3,8 +3,8 @@
 var dist = new Dictionary<(int x, int y), int>();
 var dir = new (int x, int y)[] { (0, 1), (1, 0), (0, -1), (-1, 0), };
 
-// PartOne(true);
-// PartOne(false);
+PartOne(true);
+PartOne(false);
 PartTwo(true);
 PartTwo(false);
 
