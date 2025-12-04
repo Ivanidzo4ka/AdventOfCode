@@ -1,5 +1,4 @@
-﻿
-long[] _mul = new long[13];
+﻿long[] _mul = new long[12];
 Dictionary<(int x, int y), long> _dp = new();
 
 PartOne(true);
@@ -35,7 +34,6 @@ int MaxJoltage(string line)
 }
 long MaxJoltageDp(string line, int start, int left)
 {
-    if (line.Length - start <= left) return -1;
     if (left == -1) return 0;
     var ans = 0L;
     if (_dp.ContainsKey((start, left)))
