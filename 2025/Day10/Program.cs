@@ -1,5 +1,4 @@
-﻿var _dp = new Dictionary<long, int>();
-PartOne(true);
+﻿PartOne(true);
 PartOne(false);
 PartTwo(true);
 PartTwo(false);
@@ -13,16 +12,18 @@ void PartOne(bool test = false)
     }
     foreach (var puzzle in data)
     {
-        ans += Solve(puzzle);
+        ans += Solve(puzzle.Lights, puzzle.Buttons);
     }
     Console.WriteLine(ans);
 }
-int Solve(Puzzle puzzle)
+int Solve(int lights, IList<IList<int>> buttons)
 {
     var queue = new Queue<int>();
-    queue.Enqueue(puzzle.Lights);
-    var seen = new HashSet<int>();
-    seen.Add(puzzle.Lights);
+    queue.Enqueue(lights);
+    var seen = new HashSet<int>
+    {
+        lights
+    };
     var step = 0;
     while (true)
     {
@@ -35,12 +36,12 @@ int Solve(Puzzle puzzle)
             {
                 return step;
             }
-            foreach (var btn in puzzle.Buttons)
+            foreach (var btn in buttons)
             {
                 var newState = state;
                 foreach (var idx in btn)
                 {
-                    newState ^= (1 << idx);
+                    newState ^= 1 << idx;
                 }
                 if (!seen.Contains(newState))
                 {
@@ -53,54 +54,151 @@ int Solve(Puzzle puzzle)
         (queue, newQueue) = (newQueue, queue);
     }
 }
-int SolveJoltage(IList<int> joltage, IList<HashSet<int>> buttons)
+int SolveJoltage(IList<int> joltage, IList<IList<int>> buttons)
 {
-    var key = 0L;
-    for (int i = 0; i < joltage.Count; i++)
+    var n = joltage.Count;
+    var m = buttons.Count;
+    var matrix = new double[n][];
+    for (int i = 0; i < n; i++)
     {
-        key *= 256;
-        key += joltage[i];
+        matrix[i] = new double[m + 1];
+        matrix[i][m] = joltage[i];
     }
+    for (int i = 0; i < m; i++)
+    {
+        foreach (var idx in buttons[i])
+        {
+            matrix[idx][i] = 1;
+        }
+    }
+    ProcessMatrix(matrix);
+    matrix = PruneMatrix(matrix);
+    //ProcessMatrix(matrix);
 
-    if (_dp.ContainsKey(key))
+    var ans = SolveMatrix(matrix, m - 1, new int[m]);
+    Console.WriteLine(ans);
+    return ans;
+}
+double[][] PruneMatrix(double[][] matrix)
+{
+    List<double[]> result = new List<double[]>();
+    for (int i = 0; i < matrix.Length; i++)
     {
-        return _dp[key];
-    }
-    var ans = int.MaxValue;
-    var min = -1;
-    for (int i = 0; i < joltage.Count; i++)
-    {
-        if ((min == -1 || joltage[i] < joltage[min]) && joltage[i] > 0)
+        var allZero = true;
+        for (int j = 0; j < matrix[0].Length-1; j++)
         {
-            min = i;
-        }
-    }
-    for (int i = 0; i < buttons.Count; i++)
-    {
-        if (buttons[i].Contains(min))
-        {
-            var newJoltage = new List<int>(joltage);
-            var good = true;
-            foreach (var idx in buttons[i])
+            matrix[i][j] = Math.Round(matrix[i][j], 6);
+            if (matrix[i][j] != 0)
             {
-                if (joltage[idx] < joltage[min])
+                allZero = false;
+            }
+
+        }
+        if (!allZero) result.Add(matrix[i]);
+    }
+    return result.ToArray();
+
+}
+void ProcessMatrix(double[][] matrix)
+{
+    var n = matrix.Length;
+    var m = matrix[0].Length - 1;
+    for (int i = 0; i < n; i++)
+    {
+        if (matrix[i][i] == 0)
+        {
+            var change = i + 1;
+            while (change < n && matrix[change][i] == 0)
+                change++;
+            if (change == n)
+            {
+                change = i + 1;
+                while (change < m && matrix[i][change] == 0)
+                    change++;
+                if (change >= m)
+                    return;
+                for (int z = 0; z < n; z++)
                 {
-                    good = false;
-                    break;
+                    (matrix[z][i], matrix[z][change]) = (matrix[z][change], matrix[z][i]);
                 }
-                newJoltage[idx] = newJoltage[idx] - joltage[min];
             }
-            if (!good) continue;
-            var solve = SolveJoltage(newJoltage, buttons);
-            if (solve == int.MaxValue)
+            else
             {
-                continue;
+                for (int j = 0; j < m + 1; j++)
+                {
+                    matrix[i][j] += matrix[change][j] / matrix[change][i];
+                }
             }
-            else ans = Math.Min(ans, joltage[min] + solve);
+        }
+
+        if (matrix[i][i] != 1)
+        {
+            var t = matrix[i][i];
+            for (int j = 0; j < m + 1; j++)
+            {
+                matrix[i][j] = matrix[i][j] / t;
+            }
+        }
+        for (int r = i + 1; r < n; r++)
+        {
+
+            var mul = matrix[r][i];
+            if (mul == 0)
+                continue;
+            for (int j = i; j < m + 1; j++)
+            {
+                matrix[r][j] = matrix[r][j] - mul * matrix[i][j];
+            }
+        }
+        matrix = PruneMatrix(matrix);
+        n = matrix.Length;
+        PrintMatrix(matrix);
+    }
+}
+int SolveMatrix(double[][] matrix, int pos, int[] ans)
+{
+    var res = 1000000;
+    if (pos == -1)
+    {
+        return ans.Sum();
+    }
+    if (matrix.Length > pos)
+    {
+        double cand = 0;
+        for (int j = matrix[0].Length - 2; j > pos; j--)
+        {
+            cand += matrix[pos][j] * ans[j];
+        }
+        cand = matrix[pos][^1] - cand;
+        var intCand = (int)Math.Round(cand);
+        if (Math.Abs(cand - intCand) < 1e-4 && intCand >= 0)
+        {
+            ans[pos] = intCand;
+            res = Math.Min(res, SolveMatrix(matrix, pos - 1, ans));
         }
     }
-    _dp[key] = ans;
-    return _dp[key];
+    else
+    {
+        for (int i = 0; i < 256; i++)
+        {
+            ans[pos] = i;
+            res = Math.Min(res, SolveMatrix(matrix, pos - 1, ans));
+        }
+    }
+    return res;
+}
+void PrintMatrix(double[][] matrix)
+{
+    return;
+    for (int i = 0; i < matrix.Length; i++)
+    {
+        for (int j = 0; j < matrix[i].Length; j++)
+        {
+            Console.Write($"{matrix[i][j],8:F2} ");
+        }
+        Console.WriteLine();
+    }
+    Console.WriteLine();
 }
 void PartTwo(bool test = false)
 {
@@ -110,31 +208,17 @@ void PartTwo(bool test = false)
     {
         Console.Write("Test:");
     }
-    var t = new int[4] { 31, 4, 31, 29 };
-
-
-    for (int a = 0; a <= 31; a++)
-        for (int b = 0; b <= 31; b++)
-            for (int c = 0; c <= 31; c++)
-                for (int d = 0; d <= 31; d++)
-                    for (int e = 0; e <= 31; e++)
-                    {
-                        if (a + d + e == 31 && b + d == 4 && a + c + d == 31 && a + b + c == 29)
-                        {
-                            ans = a + b + c + d + e;
-                        }
-                    }
     foreach (var puzzle in data)
     {
-        _dp.Clear();
-        _dp[0] = 0;
-        var buttons = new List<HashSet<int>>();
-        foreach (var btn in puzzle.Buttons)
+        var t = SolveJoltage(puzzle.Joltage, puzzle.Buttons);
+        ans += t;
+        if (t == 1000000)
         {
-            buttons.Add(new HashSet<int>(btn));
+            Console.WriteLine(string.Join(",", puzzle.Joltage));
         }
-        ans += SolveJoltage(puzzle.Joltage, buttons);
+
     }
+
     Console.WriteLine(ans);
 }
 
@@ -175,7 +259,5 @@ public class Puzzle
     public int Lights;
     public IList<IList<int>> Buttons;
     public IList<int> Joltage;
-
-    public long Jolt;
 
 }
